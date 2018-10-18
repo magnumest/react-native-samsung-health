@@ -44,7 +44,8 @@ class RNSamsungHealth {
 
               callback(false, resData);
           } else {
-              callback("There is no any steps data for this period", false);
+              callback(false, []);
+            //   callback("There is no any steps data for this period", false);
           }
       }
     );

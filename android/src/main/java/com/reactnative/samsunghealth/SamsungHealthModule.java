@@ -186,34 +186,21 @@ public class SamsungHealthModule extends ReactContextBaseJavaModule implements
         Log.d(REACT_MODULE, "startDate:" + Long.toString((long)startDate));
         Log.d(REACT_MODULE, "endDate:" + Long.toString((long)endDate));
 
-        /*
         Filter filter = Filter.and(
             Filter.greaterThanEquals(HealthConstants.StepCount.START_TIME, (long)startDate),
             Filter.lessThanEquals(HealthConstants.StepCount.START_TIME, (long)endDate)
         );
-        */
-        Filter filter = Filter.and(
-            Filter.greaterThanEquals(SamsungHealthModule.DAY_TIME, (long)startDate),
-            Filter.lessThanEquals(SamsungHealthModule.DAY_TIME, (long)endDate)
-        );
+       
         HealthDataResolver.ReadRequest request = new ReadRequest.Builder()
-                /*
-                .setDataType(HealthConstants.StepCount.HEALTH_DATA_TYPE) //  "com.samsung.health.step_count"
-                .setProperties(new String[]{
-                        HealthConstants.StepCount.COUNT,       // "count"
-                        HealthConstants.StepCount.START_TIME,  // SessionMeasurement: "start_time"
-                        HealthConstants.StepCount.TIME_OFFSET, // SessionMeasurement: "time_offset"
-                        HealthConstants.StepCount.DEVICE_UUID  // Common: "deviceuuid"
-                })
-                */
-                .setDataType(SamsungHealthModule.STEP_DAILY_TREND_TYPE) // "com.samsung.shealth.step_daily_trend"
-                .setProperties(new String[]{
-                        HealthConstants.StepCount.COUNT,       // "count"
-                        SamsungHealthModule.DAY_TIME,          // "day_time"
-                        HealthConstants.StepCount.DEVICE_UUID  // Common: "deviceuuid"
-                })
-                .setFilter(filter)
-                .build();
+            .setDataType(HealthConstants.StepCount.HEALTH_DATA_TYPE) //  "com.samsung.health.step_count"
+            .setProperties(new String[]{
+                    HealthConstants.StepCount.COUNT,       // "count"
+                    HealthConstants.StepCount.START_TIME,  // SessionMeasurement: "start_time"
+                    HealthConstants.StepCount.TIME_OFFSET, // SessionMeasurement: "time_offset"
+                    HealthConstants.StepCount.DEVICE_UUID  // Common: "deviceuuid"
+            })
+            .setFilter(filter)
+            .build();
 
         try {
             resolver.read(request).setResultListener(new StepCountResultListener(this, error, success));
