@@ -194,10 +194,44 @@ public class SamsungHealthModule extends ReactContextBaseJavaModule implements
         HealthDataResolver.ReadRequest request = new ReadRequest.Builder()
             .setDataType(HealthConstants.StepCount.HEALTH_DATA_TYPE) //  "com.samsung.health.step_count"
             .setProperties(new String[]{
-                    HealthConstants.StepCount.COUNT,       // "count"
-                    HealthConstants.StepCount.START_TIME,  // SessionMeasurement: "start_time"
-                    HealthConstants.StepCount.TIME_OFFSET, // SessionMeasurement: "time_offset"
-                    HealthConstants.StepCount.DEVICE_UUID  // Common: "deviceuuid"
+                HealthConstants.StepCount.COUNT,       // "count"
+                HealthConstants.StepCount.START_TIME,  // SessionMeasurement: "start_time"
+                HealthConstants.StepCount.TIME_OFFSET, // SessionMeasurement: "time_offset"
+                HealthConstants.StepCount.DEVICE_UUID  // Common: "deviceuuid"
+            })
+            .setFilter(filter)
+            .build();
+
+        try {
+            resolver.read(request).setResultListener(new StepCountResultListener(this, error, success));
+        } catch (Exception e) {
+            Log.e(REACT_MODULE, e.getClass().getName() + " - " + e.getMessage());
+            Log.e(REACT_MODULE, "Getting step count fails.");
+            error.invoke("Getting step count fails.");
+        }
+    }
+    
+    @ReactMethod
+    public void readExercises(double startDate, double endDate, Callback error, Callback success) {
+        HealthDataResolver resolver = new HealthDataResolver(mStore, null);
+
+        Log.d(REACT_MODULE, "startDate:" + Long.toString((long)startDate));
+        Log.d(REACT_MODULE, "endDate:" + Long.toString((long)endDate));
+
+        Filter filter = Filter.and(
+            Filter.greaterThanEquals(HealthConstants.StepCount.START_TIME, (long)startDate),
+            Filter.lessThanEquals(HealthConstants.StepCount.START_TIME, (long)endDate)
+        );
+       
+        HealthDataResolver.ReadRequest request = new ReadRequest.Builder()
+            .setDataType(HealthConstants.Exercise.HEALTH_DATA_TYPE) //  "com.samsung.health.step_count"
+            .setProperties(new String[]{
+                HealthConstants.Exercise.DURATION,    // "Duration"
+                HealthConstants.Exercise.EXERCISE_TYPE,     // "Type"
+                HealthConstants.Exercise.EXERCISE_CUSTOM_TYPE,     // "Custom type"
+                HealthConstants.Exercise.START_TIME,  // SessionMeasurement: "start_time"
+                HealthConstants.Exercise.TIME_OFFSET, // SessionMeasurement: "time_offset"
+                HealthConstants.Exercise.DEVICE_UUID  // Common: "deviceuuid"
             })
             .setFilter(filter)
             .build();
@@ -222,10 +256,10 @@ public class SamsungHealthModule extends ReactContextBaseJavaModule implements
         HealthDataResolver.ReadRequest request = new ReadRequest.Builder()
                 .setDataType(HealthConstants.Weight.HEALTH_DATA_TYPE) //  "com.samsung.health.weight"
                 .setProperties(new String[]{
-                        HealthConstants.Weight.WEIGHT,      // "weight"
-                        HealthConstants.Weight.START_TIME,  // DiscreteMeasurement: "start_time"
-                        HealthConstants.Weight.TIME_OFFSET, // DiscreteMeasurement: "time_offset"
-                        HealthConstants.Weight.DEVICE_UUID  // Common: "deviceuuid"
+                    HealthConstants.Weight.WEIGHT,      // "weight"
+                    HealthConstants.Weight.START_TIME,  // DiscreteMeasurement: "start_time"
+                    HealthConstants.Weight.TIME_OFFSET, // DiscreteMeasurement: "time_offset"
+                    HealthConstants.Weight.DEVICE_UUID  // Common: "deviceuuid"
                 })
                 .setFilter(filter)
                 .build();

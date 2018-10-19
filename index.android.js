@@ -1,7 +1,4 @@
-import {
-  NativeModules,
-  DeviceEventEmitter
-} from 'react-native';
+import { NativeModules, DeviceEventEmitter } from "react-native";
 
 const samsungHealth = NativeModules.RNSamsungHealth;
 
@@ -9,8 +6,12 @@ class RNSamsungHealth {
   authorize(permissions, callback) {
     samsungHealth.connect(
       permissions,
-      (msg) => { callback(msg, false); },
-      (res) => { callback(false, res); },
+      msg => {
+        callback(msg, false);
+      },
+      res => {
+        callback(false, res);
+      }
     );
   }
 
@@ -19,34 +20,77 @@ class RNSamsungHealth {
   }
 
   getDailyStepCountSamples(options, callback) {
-    let startDate = options.startDate != undefined ? Date.parse(options.startDate) : (new Date()).setHours(0,0,0,0);
-    let endDate = options.endDate != undefined ? Date.parse(options.endDate) : (new Date()).valueOf();
+    let startDate =
+      options.startDate != undefined
+        ? Date.parse(options.startDate)
+        : new Date().setHours(0, 0, 0, 0);
+    let endDate =
+      options.endDate != undefined
+        ? Date.parse(options.endDate)
+        : new Date().valueOf();
     let mergeData = options.mergeData != undefined ? options.mergeData : true;
 
-    //console.log("startDate:" + startDate);
-    //console.log("endDate:" + endDate);
-    //console.log("startDate2:" + (new Date(startDate)).toLocaleString());
-    //console.log("endDate2:" + (new Date(endDate)).toLocaleString());
+    samsungHealth.readStepCount(
+      startDate,
+      endDate,
+      msg => {
+        callback(msg, false);
+      },
+      res => {
+        if (res.length > 0) {
+          var resData = res.map(function(dev) {
+            var obj = {};
+            obj.source = dev.source.name;
+            obj.steps = this.buildDailySteps(dev.data);
+            obj.sourceDetail = dev.source;
+            return obj;
+          }, this);
 
-    samsungHealth.readStepCount(startDate, endDate,
-      (msg) => { callback(msg, false); },
-      (res) => {
-          if (res.length>0) {
-              var resData = res.map(function(dev) {
-                  var obj = {};
-                  obj.source = dev.source.name;
-                  obj.steps = this.buildDailySteps(dev.data);
-                  obj.sourceDetail = dev.source;
-                  return obj;
-                }, this);
+          if (mergeData) resData = this.mergeResult(resData);
 
-              if (mergeData) resData = this.mergeResult(resData);
+          callback(false, resData);
+        } else {
+          callback(false, []);
+          //   callback("There is no any steps data for this period", false);
+        }
+      }
+    );
+  }
 
-              callback(false, resData);
-          } else {
-              callback(false, []);
-            //   callback("There is no any steps data for this period", false);
-          }
+  getExerciseSamples(options, callback) {
+    let startDate =
+      options.startDate != undefined
+        ? Date.parse(options.startDate)
+        : new Date().setHours(0, 0, 0, 0);
+    let endDate =
+      options.endDate != undefined
+        ? Date.parse(options.endDate)
+        : new Date().valueOf();
+    let mergeData = options.mergeData != undefined ? options.mergeData : true;
+
+    samsungHealth.readExercises(
+      startDate,
+      endDate,
+      msg => {
+        callback(msg, false);
+      },
+      res => {
+        if (res.length > 0) {
+          var resData = res.map(function(dev) {
+            var obj = {};
+            obj.source = dev.source.name;
+            obj.exercises = this.buildDailyExercises(dev.data);
+            obj.sourceDetail = dev.source;
+            return obj;
+          }, this);
+
+          if (mergeData) resData = this.mergeResult(resData);
+
+          callback(false, resData);
+        } else {
+          callback(false, []);
+          //   callback("There is no any steps data for this period", false);
+        }
       }
     );
   }
@@ -54,12 +98,22 @@ class RNSamsungHealth {
   getWeightSamples(options, callback) {
     console.log("getWeightSamples");
 
-    let startDate = options.startDate != undefined ? Date.parse(options.startDate) : (new Date()).setHours(0,0,0,0);
-    let endDate = options.endDate != undefined ? Date.parse(options.endDate) : (new Date()).valueOf();
+    let startDate =
+      options.startDate != undefined
+        ? Date.parse(options.startDate)
+        : new Date().setHours(0, 0, 0, 0);
+    let endDate =
+      options.endDate != undefined
+        ? Date.parse(options.endDate)
+        : new Date().valueOf();
 
-    samsungHealth.readWeight(startDate, endDate,
-      (msg) => { callback(msg, false); },
-      (res) => {
+    samsungHealth.readWeight(
+      startDate,
+      endDate,
+      msg => {
+        callback(msg, false);
+      },
+      res => {
         // TODO: processing some
         console.log(res);
         callback(false, res);
@@ -71,71 +125,97 @@ class RNSamsungHealth {
     DeviceEventEmitter.removeAllListeners();
   }
 
-  buildDailySteps(data)
-  {
-      results = {}
-      for(var step of data) {
-          var date = step.start_time !== undefined ? new Date(step.start_time) : new Date(step.day_time);
+  buildDailySteps(data) {
+    results = {};
+    for (var step of data) {
+      var date =
+        step.start_time !== undefined
+          ? new Date(step.start_time)
+          : new Date(step.day_time);
 
-          var day = ("0" + date.getDate()).slice(-2);
-          var month = ("0" + (date.getMonth()+1)).slice(-2);
-          var year = date.getFullYear();
-          var dateFormatted = year + "-" + month + "-" + day;
+      var day = ("0" + date.getDate()).slice(-2);
+      var month = ("0" + (date.getMonth() + 1)).slice(-2);
+      var year = date.getFullYear();
+      var dateFormatted = year + "-" + month + "-" + day;
 
-          if (!(dateFormatted in results)) {
-              results[dateFormatted] = 0;
-          }
-          results[dateFormatted] += step.count;
+      if (!(dateFormatted in results)) {
+        results[dateFormatted] = 0;
       }
+      results[dateFormatted] += step.count;
+    }
 
-      results2 = [];
-      for(var index in results) {
-          results2.push({date: index, value: results[index]});
-      }
-      return results2;
+    results2 = [];
+    for (var index in results) {
+      results2.push({ date: index, value: results[index] });
+    }
+    return results2;
   }
 
-  mergeResult(res)
-  {
-      results = {}
-      for(var dev of res)
-      {
-          if (!(dev.sourceDetail.group in results)) {
-              results[dev.sourceDetail.group] = {
-                  source: dev.source,
-                  sourceDetail: { group: dev.sourceDetail.group },
-                  stepsDate: {}
-              };
-          }
+  buildDailyExercises(data) {
+    results = {};
+    for (var exercise of data) {
+      var date =
+        exercise.start_time !== undefined
+          ? new Date(exercise.start_time)
+          : new Date(exercise.day_time);
 
-          let group = results[dev.sourceDetail.group];
+      var day = ("0" + date.getDate()).slice(-2);
+      var month = ("0" + (date.getMonth() + 1)).slice(-2);
+      var year = date.getFullYear();
+      var dateFormatted = year + "-" + month + "-" + day;
 
-          for (var step of dev.steps) {
-              if (!(step.date in group.stepsDate)) {
-                  group.stepsDate[step.date] = 0;
-              }
+      if (!(dateFormatted in results)) {
+        results[dateFormatted] = [];
+      }
+      results[dateFormatted].push(exercise);
+    }
 
-              group.stepsDate[step.date] += step.value;
-          }
+    results2 = [];
+    for (var index in results) {
+      results2.push({ date: index, value: results[index] });
+    }
+    return results2;
+  }
+
+  mergeResult(res) {
+    results = {};
+    for (var dev of res) {
+      if (!(dev.sourceDetail.group in results)) {
+        results[dev.sourceDetail.group] = {
+          source: dev.source,
+          sourceDetail: { group: dev.sourceDetail.group },
+          stepsDate: {},
+        };
       }
 
-      results2 = [];
-      for(var index in results) {
-          let group = results[index];
-          var steps = [];
-          for(var date in group.stepsDate) {
-              steps.push({
-                date: date,
-                value: group.stepsDate[date]
-              });
-          }
-          group.steps = steps.sort((a,b) => a.date < b.date ? -1 : 1);
-          delete group.stepsDate;
+      let group = results[dev.sourceDetail.group];
 
-          results2.push(group);
+      for (var step of dev.steps) {
+        if (!(step.date in group.stepsDate)) {
+          group.stepsDate[step.date] = 0;
+        }
+
+        group.stepsDate[step.date] += step.value;
       }
+    }
 
-      return results2;
+    results2 = [];
+    for (var index in results) {
+      let group = results[index];
+      var steps = [];
+      for (var date in group.stepsDate) {
+        steps.push({
+          date: date,
+          value: group.stepsDate[date],
+        });
+      }
+      group.steps = steps.sort((a, b) => (a.date < b.date ? -1 : 1));
+      delete group.stepsDate;
+
+      results2.push(group);
+    }
+
+    return results2;
   }
 }
 
