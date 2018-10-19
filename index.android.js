@@ -66,7 +66,6 @@ class RNSamsungHealth {
       options.endDate != undefined
         ? Date.parse(options.endDate)
         : new Date().valueOf();
-    let mergeData = options.mergeData != undefined ? options.mergeData : true;
 
     samsungHealth.readExercises(
       startDate,
@@ -83,8 +82,6 @@ class RNSamsungHealth {
             obj.sourceDetail = dev.source;
             return obj;
           }, this);
-
-          if (mergeData) resData = this.mergeResult(resData);
 
           callback(false, resData);
         } else {
