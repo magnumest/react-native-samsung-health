@@ -1,9 +1,6 @@
-import { NativeModules, DeviceEventEmitter } from "react-native";
+import { NativeModules, DeviceEventEmitter } from 'react-native';
 
-import {
-  EXERCISE_TYPES as RNSH_EXERCISE_TYPES,
-  PERMISSIONS as RNSH_PERMISSIONS,
-} from "./constants";
+import { EXERCISE_TYPES as RNSH_EXERCISE_TYPES, PERMISSIONS as RNSH_PERMISSIONS } from './constants';
 
 const samsungHealth = NativeModules.RNSamsungHealth;
 
@@ -11,7 +8,7 @@ function formatDate(date) {
   const year = date.getFullYear();
   const month = `00${date.getMonth() + 1}`.slice(-2);
   const day = `00${date.getDate()}`.slice(-2);
-  return [year, month, day].join("-");
+  return [year, month, day].join('-');
 }
 
 function buildDailySteps(data) {
@@ -30,32 +27,18 @@ function buildDailySteps(data) {
 }
 
 function buildDailyExercises(data) {
-  const exercisesByDate = data.reduce((acc, cur) => {
-    const {
-      duration,
-      exercise_type: exerciseTypeCode = 0,
-      start_time: startTime,
-    } = cur;
-    const timestamp = formatDate(new Date(startTime));
-    const { [timestamp]: currentExercises = [] } = acc;
+  return data.map(obj => {
+    const { duration, exercise_type: exerciseTypeCode = 0, start_time: startTime } = obj;
+    const date = formatDate(new Date(startTime));
 
-    const exercise = {
-      duration,
+    return {
+      date,
       exerciseTypeCode,
+      duration: duration / 1000,
       exerciseTypeName: RNSH_EXERCISE_TYPES[exerciseTypeCode],
       startTime: new Date(startTime).toISOString(),
     };
-
-    return Object.assign({}, acc, {
-      [timestamp]: [...currentExercises, exercise],
-    });
-  }, {});
-
-  // Transform to array of { date, steps } object
-  return Object.keys(exercisesByDate).map(date => ({
-    date,
-    exercises: exercisesByDate[date],
-  }));
+  });
 }
 
 class RNSamsungHealth {
@@ -79,14 +62,8 @@ class RNSamsungHealth {
   }
 
   getDailyStepCountSamples(options, callback) {
-    const startDate =
-      options.startDate != null
-        ? Date.parse(options.startDate)
-        : new Date().setHours(0, 0, 0, 0);
-    const endDate =
-      options.endDate != null
-        ? Date.parse(options.endDate)
-        : new Date().valueOf();
+    const startDate = options.startDate != null ? Date.parse(options.startDate) : new Date().setHours(0, 0, 0, 0);
+    const endDate = options.endDate != null ? Date.parse(options.endDate) : new Date().valueOf();
 
     samsungHealth.readStepCount(
       startDate,
@@ -98,9 +75,7 @@ class RNSamsungHealth {
           return;
         }
 
-        const flattenResults = results
-          .map(({ data }) => data)
-          .reduce((acc, cur) => [...acc, ...cur], []);
+        const flattenResults = results.map(({ data }) => data).reduce((acc, cur) => [...acc, ...cur], []);
         const stepCountSamples = buildDailySteps(flattenResults);
 
         callback(undefined, stepCountSamples);
@@ -109,14 +84,8 @@ class RNSamsungHealth {
   }
 
   getExerciseSamples(options, callback) {
-    const startDate =
-      options.startDate != null
-        ? Date.parse(options.startDate)
-        : new Date().setHours(0, 0, 0, 0);
-    const endDate =
-      options.endDate != null
-        ? Date.parse(options.endDate)
-        : new Date().valueOf();
+    const startDate = options.startDate != null ? Date.parse(options.startDate) : new Date().setHours(0, 0, 0, 0);
+    const endDate = options.endDate != null ? Date.parse(options.endDate) : new Date().valueOf();
 
     samsungHealth.readExercises(
       startDate,
@@ -128,9 +97,7 @@ class RNSamsungHealth {
           return;
         }
 
-        const flattenResults = results
-          .map(({ data }) => data)
-          .reduce((acc, cur) => [...acc, ...cur], []);
+        const flattenResults = results.map(({ data }) => data).reduce((acc, cur) => [...acc, ...cur], []);
         const exerciseSamples = buildDailyExercises(flattenResults);
 
         callback(undefined, exerciseSamples);
@@ -139,14 +106,8 @@ class RNSamsungHealth {
   }
 
   getWeightSamples(options, callback) {
-    const startDate =
-      options.startDate != null
-        ? Date.parse(options.startDate)
-        : new Date().setHours(0, 0, 0, 0);
-    const endDate =
-      options.endDate != null
-        ? Date.parse(options.endDate)
-        : new Date().valueOf();
+    const startDate = options.startDate != null ? Date.parse(options.startDate) : new Date().setHours(0, 0, 0, 0);
+    const endDate = options.endDate != null ? Date.parse(options.endDate) : new Date().valueOf();
 
     samsungHealth.readWeight(
       startDate,
